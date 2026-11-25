@@ -21,19 +21,26 @@ const ENTRY =
 // Gate (mirrors the sealed scorer in RULES.txt): UTF-8 text of 1-200
 // characters, not only whitespace, a single line, nothing appended after it,
 // so the file the judge reads is byte-identical to the text above.
-const charCount = [...ENTRY].length;
-if (ENTRY.trim().length === 0) {
-  throw new Error("gate: entry is only whitespace");
+// Kept as its own step so the entry constant above stays a pure literal and
+// the checks can be reasoned about (and tested) independently of the write.
+function validateEntry(text: string): number {
+  const count = [...text].length;
+  if (text.trim().length === 0) {
+    throw new Error("gate: entry is only whitespace");
+  }
+  if (/[\r\n]/.test(text)) {
+    throw new Error("gate: entry must be a single line");
+  }
+  if (count < 1 || count > 200) {
+    throw new Error(`gate: ${count} chars, must be 1-200`);
+  }
+  if (text !== text.trim()) {
+    throw new Error("gate: entry has leading or trailing whitespace");
+  }
+  return count;
 }
-if (/[\r\n]/.test(ENTRY)) {
-  throw new Error("gate: entry must be a single line");
-}
-if (charCount < 1 || charCount > 200) {
-  throw new Error(`gate: ${charCount} chars, must be 1-200`);
-}
-if (ENTRY !== ENTRY.trim()) {
-  throw new Error("gate: entry has leading or trailing whitespace");
-}
+
+const charCount = validateEntry(ENTRY);
 const wordCount = ENTRY.trim().split(/\s+/).filter(Boolean).length;
 
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
